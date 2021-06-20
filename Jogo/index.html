@@ -1,0 +1,298 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Monster Slayer</title>
+    <script src="https://npmcdn.com/vue/dist/vue.js"></script>
+    <link rel="stylesheet" href="foundation.min.css">
+    <link rel="stylesheet" href="app.css">
+</head>
+
+<body>
+    <style>
+        .barra-verde{
+            background-color: chartreuse;
+            color: black;
+            margin: 0;
+        }
+        .barra-vermelha{
+            background-color: red;
+            color: white;
+            margin: 0;
+        }
+        .game-buttons {
+            background: #f3f3f4;
+            padding: 10px 30px 30px 30px;
+            margin: 20px;
+        }
+        .box {
+            background: #f3f3f4;
+            padding: 10px 30px 30px 30px;
+            margin: 20px;
+        }
+/* Button D */
+        button.buttonD {
+            display: inline-block;
+            padding: 16px 30px;
+            background: #0079ff;
+            color: #000000;
+            border-radius: 5px;  
+            text-decoration: none;
+            animation-duration: 1s;
+            animation-fill-mode: both;
+            animation-iteration-count: 1;
+            margin: 14px;
+        }
+
+        button.buttonD:hover {
+            animation-name: rubberBand;
+        }
+
+        @keyframes rubberBand {
+        from {
+            transform: scale3d(1, 1, 1);
+        }
+
+        30% {
+            transform: scale3d(1.25, 0.75, 1);
+        }
+
+        40% {
+            transform: scale3d(0.75, 1.25, 1);
+        }
+
+        50% {
+            transform: scale3d(1.15, 0.85, 1);
+        }
+
+        65% {
+            transform: scale3d(.95, 1.05, 1);
+        }
+
+        75% {
+            transform: scale3d(1.05, .95, 1);
+        }
+
+        to {
+            transform: scale3d(1, 1, 1);
+        }
+        }
+        .rubberBand {
+        -webkit-animation-name: rubberBand;
+        animation-name: rubberBand;
+        }
+    </style>
+    <div id="app">
+        <section class="row">
+            <div class="small-6 columns">
+                <h1 class="text-center">YOU</h1>
+                <div class="healthbar">
+                    <div class="healthbar text-center" :class="[lowhealthplayer ? 'barra-vermelha' : 'barra-verde']" :style="{width:playerHealth+'%'}">
+
+                    </div>
+                </div>
+            </div>
+            <div class="small-6 columns">
+                <h1 class="text-center">MONSTER</h1>
+                <div class="healthbar">
+                    <div class="healthbar text-center" :class="[lowhealthmonster ? 'barra-vermelha' : 'barra-verde']" :style="{width:monsterHealth+'%'}">
+
+                    </div>
+                </div>
+            </div>
+        </section>
+        <section class="row controls">
+            <div class="small-12 columns" v-if="startGame===false">
+                <button id="start-game" @click="jogar()">START NEW GAME</button>
+            </div>
+        </section>
+        <section class="row controls" class="small-gif">
+            <div class="gif" v-if="startGame===true">
+                <img src="Cenario.gif">
+            </div>
+        </section>
+        <section class="row controls">
+            <div class="small-12 columns" class="game-buttons" v-if="startGame===true">
+                <button class="buttonD" href="#" id="attack" @click="attack()">ATTACK</button>
+                <button class="buttonD" href="#" id="special-attack" @click="specialattack()">SPECIAL ATTACK</button>
+                <button class="buttonD" href="#" id="heal" @click="heal()">HEAL</button>
+                <button class="buttonD" href="#" id="give-up"@click="giveup()">GIVE UP</button>
+            </div>
+        </section>
+        <section class="row log">
+            <div class="small-12 columns">
+                <ul>
+                    <li v-for="historico in historicos">
+                        {{historico.texto}}
+                    </li>
+                </ul>
+            </div>
+        </section>
+    </div>
+</body>
+<script>
+    var app = new Vue({
+        el:'#app',
+        data:{
+            playerHealth_max:100,
+            playerHealth:0,
+            monsterHealth_max:100,
+            monsterHealth:0,
+            startGame:false,
+            heal_times: 2,
+            stamina: 0,           
+            lowhealthplayer:false,
+            lowhealthmonster:false, 
+            historicos:[],
+            contador:0,
+        },
+        methods:{
+            jogar: function(){
+                this.startGame = true;
+                this.playerHealth_max = 100;
+                this.monsterHealth_max = 100;
+                this.playerHealth = this.playerHealth_max;
+                this.monsterHealth = this.monsterHealth_max;
+                this.heal_times = 2;
+                this.stamina = 0;
+            },
+            heal: function(){
+                var heal = this.playerHealth_max - this.playerHealth;
+                if (this.startGame === true){
+                    if(this.heal_times>0){
+                        if(this.playerHealth!=this.playerHealth_max){
+                            this.playerHealth = this.playerHealth + heal;
+                            this.check_health(this.playerHealth,this.monsterHealth);
+                            this.heal_times = this.heal_times - 1;
+                            this.historicos.unshift({
+                            texto:"Potion healed " +  heal + " health!",
+                        });
+                        }
+                        else{
+                            alert("Health already full!");
+                        }
+                    }
+                    else{
+                        alert("No potions left!")
+                    }
+                }
+                else{
+                    alert("Game not started!")
+                }
+            },
+            attack: function(){
+                if (this.startGame === true){
+                    if (this.stamina != 0){
+                        alert("You're too tired to attack! The enemy gets to hit you without retaliation.")
+                        var max_player = 20;
+                        var min_player = 10;
+                        var damage = Math.max(Math.floor(Math.random() * max_player ) + 1, min_player);
+                        this.playerHealth = this.playerHealth - damage;
+                        this.historicos.unshift({
+                            texto:"Monster gave " +  damage + " damage to the Player!",
+                        });
+                        this.stamina = this.stamina - 1
+                        this.check_health(this.playerHealth,this.monsterHealth);
+                    }
+                    else{
+                        var max_player = 20;
+                        var min_player = 10;
+                        var damage = Math.max(Math.floor(Math.random() * max_player ) + 1, min_player);
+                        this.playerHealth = this.playerHealth - damage;
+                        this.historicos.unshift({
+                            texto:"Monster gave " +  damage + " damage to the Player!",
+                        });
+                        var max_monster = 30;
+                        var min_monster = 5;
+                        var enemy_damage = Math.max(Math.floor(Math.random() * max_monster) + 1, min_monster);
+                        this.monsterHealth = this.monsterHealth - enemy_damage;
+                        this.historicos.unshift({
+                            texto:"Player gave " +  enemy_damage + " damage to the monster!",
+                        });
+                        this.check_health(this.playerHealth,this.monsterHealth);
+                    }
+                }
+                else{
+                    alert("Game not started!")
+                }
+            },
+            check_health:function(playerHealth,monsterHealth){
+                if(playerHealth<0){
+                    this.playerHealth = 0;
+                    alert("Monster has won!");
+                    this.startGame=false;
+                    window.location.reload();
+                }
+                else if(monsterHealth<0){
+                    this.monsterHealth = 0;
+                    alert("Player has won!");
+                    this.startGame=false;
+                    window.location.reload();
+                }
+                if(playerHealth <= 50){
+                    this.lowhealthplayer = true
+                }
+                else{
+                    this.lowhealthplayer = false
+                }
+                if(monsterHealth <= 50){
+                    this.lowhealthmonster = true
+                }
+                else{
+                    this.lowhealthmonster = false
+                }
+            },
+            specialattack: function(){
+                if (this.startGame === true){
+                    if (this.stamina == 0){
+                        var max_player = 40;
+                        var min_player = 10;
+                        var damage = Math.max(Math.floor(Math.random() * max_player ) + 1, min_player);
+                        this.playerHealth = this.playerHealth - damage;
+                        this.historicos.unshift({
+                            texto:"Monster gave " +  damage + " damage to the Player!",
+                        });
+                        var max_monster = 70;
+                        var min_monster = 9;
+                        var enemy_damage = Math.max(Math.floor(Math.random() * max_monster) + 1, min_monster);
+                        this.monsterHealth = this.monsterHealth - enemy_damage;
+                        this.stamina = this.stamina + 1
+                        this.historicos.unshift({
+                            texto:"Player gave " +  damage + " damage to the monster!",
+                        });
+                        this.check_health(this.playerHealth,this.monsterHealth);
+                    }
+                    else{
+                        alert("You can't do a special attack two times in a row!")
+                    }
+                }
+                else{
+                    alert("Game not started!")
+                }
+                },
+            giveup: function(){
+                if(this.startGame===true){
+                    alert("Coward! You lose!")
+                    this.startGame=false;
+                    window.location.reload();
+                }
+                else{
+                    alert("You're afraid already?")
+                }
+            }
+        },
+        watch:{
+            contador: function(valor){
+                var dados=this
+                setTimeout(function(){
+                    alert("Game has ended!")
+                    dados.contador=0;
+                },7000)
+            }
+        },
+        computed:{
+
+        }
+    })
+</script>
+</html>
